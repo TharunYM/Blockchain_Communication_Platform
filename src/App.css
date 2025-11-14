@@ -1,0 +1,273 @@
+/* src/App.css */
+
+/* --- Global Styles --- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #f4f7f6;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* --- Main App Container --- */
+.App {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box; /* Ensures padding doesn't break width */
+}
+
+.App-header {
+  background-color: #ffffff;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.App-header h1 {
+  margin: 0;
+  color: #0052d4;
+  font-size: 2rem;
+}
+
+main {
+  width: 100%;
+}
+
+/* --- Utility Class --- */
+.card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- UserAuth Component --- */
+.user-auth {
+  text-align: center;
+  padding: 3rem;
+}
+
+.user-auth h2 {
+  margin-top: 0;
+  font-weight: 600;
+}
+
+/* --- Chat Component --- */
+.chat-container h3 {
+  font-weight: 600;
+  word-wrap: break-word; /* Break long address */
+}
+
+.chat-container p {
+  font-size: 0.9rem;
+  color: #555;
+  word-wrap: break-word;
+}
+
+.chat-container code {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #eee;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+/* --- SendMessage Component --- */
+.send-message form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.send-message h4,
+.message-list h4 {
+  margin-top: 0;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: #0052d4;
+}
+
+/* --- MessageList Component --- */
+.message-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.message-list li {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fafafa;
+}
+
+.message-list li p {
+  margin: 0.25rem 0;
+}
+
+.message-list li strong {
+  color: #007bff;
+  font-size: 0.9rem;
+  word-wrap: break-word;
+}
+
+.message-list li small {
+  color: #777;
+  font-size: 0.8rem;
+}
+
+/* --- Global Button Style --- */
+button {
+  background: linear-gradient(90deg, #007bff, #0052d4);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3);
+}
+
+/* --- Global Input/Textarea Style --- */
+input[type='text'],
+textarea {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box; /* Important */
+  width: 100%;
+  transition: border-color 0.2s ease;
+}
+
+input[type='text']:focus,
+textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* ---
+--- STYLES FOR CONTACTS FEATURE ---
+--- */
+
+/* --- Styles for MessageList.js --- */
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.message-header p {
+  margin: 0;
+}
+
+.add-contact-btn {
+  background: #e0e6ff;
+  color: #0052d4;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.add-contact-btn:hover {
+  background: #c9d6ff;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Styles for SendMessage.js --- */
+select {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  background-color: white;
+}
+
+select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+}
+
+/* --- Styles for MessageList (Sent vs Received) --- */
+
+.message-list li {
+  /* This is new - helps align content */
+  display: flex;
+  flex-direction: column;
+}
+
+.message-received {
+  background-color: #fafafa;
+  align-items: flex-start; /* Default alignment */
+}
+
+.message-sent {
+  background-color: #e0f0ff; /* Light blue for sent messages */
+  align-items: flex-end; /* Align to the right */
+}
+
+/* Make sent message content align right */
+.message-sent .message-header {
+  align-self: flex-end;
+}
+.message-sent .message-text {
+  /* This is just an example, might need adjustment */
+  text-align: right;
+}
+
+.message-footer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.read-receipt {
+  font-weight: 600;
+}
+.read-receipt.sent {
+  color: #777;
+}
+.read-receipt.read {
+  color: #007bff;
+}
