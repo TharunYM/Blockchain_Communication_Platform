@@ -1,273 +1,448 @@
-/* src/App.css */
+/* src/App.css - Aesthetic Modern Theme */
 
-/* --- Global Styles --- */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: #f4f7f6;
-  color: #333;
+/* --- Color Palette & Variables --- */
+:root {
+  --primary-brand: #6a0572;      /* Deep Plum/Purple */
+  --secondary-brand: #8e2de2;    /* Vibrant Violet */
+  --tertiary-brand: #4a00e0;     /* Darker Violet/Indigo */
+  --accent-success: #28a745;     /* Green for success/read receipts */
+  --text-dark: #2c3e50;          /* Dark charcoal for main text */
+  --text-medium: #7f8c8d;        /* Muted gray for secondary text */
+  --text-light: #ecf0f1;         /* Light gray for white-on-dark */
+
+  --bg-main: #f0f2f5;            /* Light neutral background for general UI */
+  --bg-chat-window: #e8eaf6;     /* Very light blue-gray for chat area */
+  --bg-sidebar: #ffffff;         /* Pure white for sidebar */
+  --bg-header: #ffffff;          /* Pure white for headers */
+  --bg-input: #ffffff;           /* Pure white for input fields */
+
+  --border-subtle: #e0e0e0;       /* Light border color */
+  --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 6px 20px rgba(0, 0, 0, 0.15);
+
+  --bubble-sent: linear-gradient(135deg, #e0f7fa 0%, #bbdefb 100%); /* Light blue-cyan gradient */
+  --bubble-received: #ffffff;   /* Pure white for received messages */
+}
+
+/* --- Global & Base Styles --- */
+html, body, #root {
   margin: 0;
   padding: 0;
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; /* Using Inter for modern feel */
+  overflow: hidden;
+  color: var(--text-dark);
 }
 
-#root {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-}
-
-/* --- Main App Container --- */
 .App {
+  display: flex;
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-  box-sizing: border-box; /* Ensures padding doesn't break width */
+  height: 100vh;
+  background-color: var(--bg-main);
 }
 
-.App-header {
-  background-color: #ffffff;
-  padding: 20px 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+/* --- Login Screen --- */
+.App.login-background {
+  background: linear-gradient(135deg, var(--secondary-brand) 0%, var(--tertiary-brand) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-container {
+  background-color: rgba(255, 255, 255, 0.98);
+  padding: 60px 40px; /* More vertical padding */
+  border-radius: 20px; /* Softer corners */
+  box-shadow: var(--shadow-medium);
   text-align: center;
-  margin-bottom: 2rem;
-}
-
-.App-header h1 {
-  margin: 0;
-  color: #0052d4;
-  font-size: 2rem;
-}
-
-main {
   width: 100%;
+  max-width: 450px; /* Slightly wider */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* --- Utility Class --- */
-.card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 2rem;
-  margin-bottom: 1.5rem;
+.login-container:hover {
+  transform: translateY(-8px); /* More pronounced lift */
+  box-shadow: 0 12px 25px rgba(0,0,0,0.2);
 }
 
-/* --- UserAuth Component --- */
-.user-auth {
-  text-align: center;
-  padding: 3rem;
+.login-container h2 {
+  color: var(--primary-brand);
+  font-size: 2.8rem; /* Larger title */
+  margin-bottom: 15px;
+  letter-spacing: -1.5px;
+  font-weight: 800; /* Bolder */
 }
 
-.user-auth h2 {
-  margin-top: 0;
-  font-weight: 600;
+.login-container p {
+  color: var(--text-medium);
+  font-size: 1.15rem; /* Slightly larger text */
+  margin-bottom: 40px; /* More spacing */
+  line-height: 1.6;
 }
 
-/* --- Chat Component --- */
-.chat-container h3 {
-  font-weight: 600;
-  word-wrap: break-word; /* Break long address */
+.login-btn {
+  background: linear-gradient(90deg, var(--primary-brand), var(--secondary-brand));
+  color: white;
+  border: none;
+  padding: 16px 30px; /* Larger button */
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: var(--shadow-light);
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
-.chat-container p {
-  font-size: 0.9rem;
-  color: #555;
-  word-wrap: break-word;
+.login-btn:hover {
+  box-shadow: var(--shadow-medium);
+  transform: translateY(-3px);
 }
 
-.chat-container code {
-  font-family: 'Courier New', Courier, monospace;
-  background-color: #eee;
-  padding: 2px 5px;
-  border-radius: 4px;
+.login-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.8;
 }
 
-/* --- SendMessage Component --- */
-.send-message form {
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-main);
+  color: var(--text-medium);
+  font-size: 1.2rem;
+}
+
+/* --- Chat UI --- */
+
+/* Sidebar (Left Column) */
+.sidebar {
+  width: 30%;
+  min-width: 320px; /* Slightly wider min-width */
+  max-width: 450px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
-.send-message h4,
-.message-list h4 {
-  margin-top: 0;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 0.5rem;
-  font-size: 1.2rem;
-  color: #0052d4;
-}
-
-/* --- MessageList Component --- */
-.message-list ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.message-list li {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background-color: #fafafa;
-}
-
-.message-list li p {
-  margin: 0.25rem 0;
-}
-
-.message-list li strong {
-  color: #007bff;
-  font-size: 0.9rem;
-  word-wrap: break-word;
-}
-
-.message-list li small {
-  color: #777;
-  font-size: 0.8rem;
-}
-
-/* --- Global Button Style --- */
-button {
-  background: linear-gradient(90deg, #007bff, #0052d4);
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-}
-
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 123, 255, 0.3);
-}
-
-/* --- Global Input/Textarea Style --- */
-input[type='text'],
-textarea {
-  font-family: inherit;
-  font-size: 1rem;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box; /* Important */
-  width: 100%;
-  transition: border-color 0.2s ease;
-}
-
-input[type='text']:focus,
-textarea:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
-}
-
-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-/* ---
---- STYLES FOR CONTACTS FEATURE ---
---- */
-
-/* --- Styles for MessageList.js --- */
-.message-header {
+.sidebar-header {
+  height: 70px; /* Taller header */
+  padding: 15px 20px; /* More padding */
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  justify-content: space-between;
 }
 
-.message-header p {
+.sidebar-header h3 {
   margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-dark);
+}
+
+.contact-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px; /* More padding */
+  cursor: pointer;
+  border-bottom: 1px solid #f8f8f8; /* Very light border */
+  transition: background-color 0.2s ease;
+}
+
+.contact-item:hover {
+  background-color: #f5f5f5; /* Subtle hover */
+}
+
+.contact-item.active {
+  background-color: #e3f2fd; /* Light blue for active contact */
+  border-left: 4px solid var(--primary-brand); /* Accent bar */
+  padding-left: 16px; /* Adjust padding due to border */
+}
+
+.contact-info {
+  flex-grow: 1;
+}
+
+.contact-info h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.contact-info p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-medium);
+}
+
+.avatar {
+  width: 50px; /* Slightly larger avatar */
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--primary-brand), var(--secondary-brand)); /* Gradient avatar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  margin-right: 15px;
+  font-size: 1.3rem; /* Larger initial */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .add-contact-btn {
-  background: #e0e6ff;
-  color: #0052d4;
-  font-size: 0.8rem;
-  font-weight: 600;
+  background: none;
   border: none;
-  border-radius: 6px;
-  padding: 6px 10px;
+  color: var(--primary-brand);
+  font-size: 2.2rem; /* Larger plus sign */
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: none;
+  line-height: 1;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 }
 
 .add-contact-btn:hover {
-  background: #c9d6ff;
-  transform: none;
-  box-shadow: none;
+  background-color: rgba(var(--primary-brand), 0.1);
 }
 
-/* --- Styles for SendMessage.js --- */
-select {
-  font-family: inherit;
-  font-size: 1rem;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-  width: 100%;
-  background-color: white;
-}
-
-select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
-}
-
-/* --- Styles for MessageList (Sent vs Received) --- */
-
-.message-list li {
-  /* This is new - helps align content */
+/* Chat Window (Right Column) */
+.chat-window {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-chat-window);
+  position: relative;
+  overflow: hidden; /* Ensure pattern doesn't bleed */
 }
 
-.message-received {
-  background-color: #fafafa;
-  align-items: flex-start; /* Default alignment */
+/* Subtle pattern for chat background using CSS only */
+.chat-window::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  opacity: 0.08; /* Softer opacity */
+  background-image: radial-gradient(var(--primary-brand) 1px, transparent 1px);
+  background-size: 25px 25px; /* Larger pattern */
+  pointer-events: none;
+  filter: blur(0.5px); /* Slightly blur the pattern */
+}
+
+.chat-header {
+  height: 70px; /* Taller header */
+  padding: 15px 20px;
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* To push dropdown to right */
+  z-index: 2; /* Ensure header is above chat pattern */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Very subtle shadow */
+}
+
+.chat-header-info h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.chat-header-info p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-medium);
+}
+
+
+.messages-container {
+  flex: 1;
+  padding: 20px 60px; /* More horizontal padding */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+.message-bubble {
+  max-width: 60%; /* Slightly smaller max-width */
+  padding: 12px 18px; /* More padding inside bubbles */
+  margin-bottom: 10px; /* More space between bubbles */
+  border-radius: 12px; /* Softer corners */
+  font-size: 1rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Softer shadow */
+  position: relative;
 }
 
 .message-sent {
-  background-color: #e0f0ff; /* Light blue for sent messages */
-  align-items: flex-end; /* Align to the right */
-}
-
-/* Make sent message content align right */
-.message-sent .message-header {
   align-self: flex-end;
-}
-.message-sent .message-text {
-  /* This is just an example, might need adjustment */
-  text-align: right;
+  background: var(--bubble-sent);
+  color: var(--text-dark); /* Darker text for readability on light bubble */
+  border-top-right-radius: 4px; /* Slightly less sharp point */
 }
 
-.message-footer {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.5rem;
+.message-received {
+  align-self: flex-start;
+  background-color: var(--bubble-received);
+  border-top-left-radius: 4px; /* Slightly less sharp point */
+  color: var(--text-dark);
+}
+
+.msg-time {
+  display: block;
+  text-align: right;
+  font-size: 0.75rem; /* Slightly larger time */
+  color: var(--text-medium);
+  margin-top: 6px; /* More space from message */
 }
 
 .read-receipt {
-  font-weight: 600;
+  margin-left: 6px; /* More space for receipt icon */
+  color: var(--accent-success); /* Fresh green */
+  font-weight: 600; /* Bolder checkmark */
+  font-size: 0.85rem;
 }
-.read-receipt.sent {
-  color: #777;
+
+.chat-footer {
+  padding: 15px 20px; /* More padding */
+  background-color: var(--bg-header);
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  z-index: 2;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.05); /* Subtle top shadow */
 }
-.read-receipt.read {
-  color: #007bff;
+
+.input-wrapper {
+  flex: 1;
+  background: var(--bg-input);
+  border-radius: 25px; /* Pill-shaped input */
+  padding: 12px 20px; /* More padding */
+  margin: 0 15px; /* More margin */
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); /* Inner shadow */
+}
+
+.input-wrapper textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  height: 24px; /* Taller input */
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-dark);
+  padding: 0;
+}
+
+.send-btn {
+  color: var(--primary-brand);
+  font-size: 1.8rem; /* Larger send icon */
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.send-btn:hover {
+  background-color: rgba(var(--primary-brand), 0.1);
+  transform: scale(1.1);
+}
+
+/* --- Chat Options Menu (3 Dots) --- */
+.header-right {
+  margin-left: auto;
+  position: relative;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  font-size: 1.8rem; /* Larger icon */
+  cursor: pointer;
+  color: var(--text-medium);
+  padding: 10px; /* Larger hit area */
+  border-radius: 50%;
+  line-height: 1;
+  transition: background-color 0.2s;
+}
+
+.menu-btn:hover {
+  background-color: #f0f2f5;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 55px; /* Position below button */
+  right: 0;
+  background-color: var(--bg-input);
+  box-shadow: var(--shadow-medium);
+  border-radius: 8px; /* Softer corners */
+  padding: 8px 0; /* More padding */
+  min-width: 180px; /* Wider menu */
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInDrop 0.2s ease forwards; /* Custom animation */
+}
+
+.dropdown-item {
+  padding: 12px 25px; /* More padding */
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-dark);
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-item.danger {
+  color: #dc3545; /* Standard red for danger */
+}
+
+.dropdown-item.danger:hover {
+  background-color: #ffebee;
+}
+
+@keyframes fadeInDrop {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar Styling (for aesthetics) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--primary-brand), 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--primary-brand), 0.5);
 }
