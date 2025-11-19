@@ -7,7 +7,6 @@ import {
     listenForMessages, 
     markAsReadOnChain, 
     listenForReadReceipts
-    // Removed setProfilePicOnChain, getProfilePicFromChain
 } from '../services/blockchain';
 
 const CONTACTS_STORAGE_KEY = 'secure-messenger-contacts';
@@ -18,7 +17,8 @@ const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
 
-function Chat({ user }) {
+// UPDATED: Now accepting 'account', 'contract', and 'web3' props
+function Chat({ user, account, contract, web3 }) {
     const [messages, setMessages] = useState([]);
     const [contacts, setContacts] = useState([]);
     const [readStatusMap, setReadStatusMap] = useState(new Map());
@@ -27,9 +27,7 @@ function Chat({ user }) {
     const [activeContact, setActiveContact] = useState(null);
     const [showMenu, setShowMenu] = useState(false);
 
-    // Profile Pic States (REMOVED) - no longer needed
-
-    // Load contacts on component mount or user change
+    // Load contacts on component mount
     useEffect(() => {
         const loadContacts = () => {
             const storedContacts = localStorage.getItem(CONTACTS_STORAGE_KEY);
@@ -41,6 +39,16 @@ function Chat({ user }) {
     }, [user.account]);
 
     // --- Actions ---
+
+    // NEW: Function to copy your address to clipboard
+    const copyAddress = () => {
+        // Use the active MetaMask account, or fallback to the logged-in user account
+        const addressToCopy = account || user.account;
+        if (addressToCopy) {
+            navigator.clipboard.writeText(addressToCopy);
+            alert("Address copied to clipboard!");
+        }
+    };
 
     const addContact = async () => {
         const address = prompt("Enter Ethereum Address:");
@@ -145,10 +153,44 @@ function Chat({ user }) {
             {/* --- LEFT SIDEBAR (Contact List) --- */}
             <div className="sidebar">
                 <div className="sidebar-header">
-                    <div style={{display:'flex', alignItems:'center'}}>
-                         {/* My Profile Avatar (First letter only) */}
+                    <div style={{display:'flex', alignItems:'center', gap: '10px'}}>
+                         {/* My Profile Avatar */}
                          <div className="avatar" style={{backgroundColor:'#4a148c'}}>You</div>
-                         <h3 title={user.account}>My Profile</h3>
+                         
+                         {/* Profile Info & Copy Address */}
+                         <div style={{display:'flex', flexDirection:'column'}}>
+                             <h3 title={user.account} style={{margin:0, fontSize:'1rem'}}>My Profile</h3>
+                             
+                             {/* NEW: Wallet Address Display with Copy Button */}
+                             <div className="wallet-info" style={{ 
+                                 marginTop: '2px', 
+                                 fontSize: '0.8rem', 
+                                 color: '#423c3cff',
+                                 fontWeight:'600',
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 gap: '6px' 
+                             }}>
+                                 <span style={{opacity: 0.8}}>
+                                     {account ? truncateAddress(account) : truncateAddress(user.account)}
+                                 </span>
+                                 <button 
+                                     onClick={copyAddress} 
+                                     title="Copy Full Address"
+                                     style={{
+                                         background: 'rgba(255,255,255,0.2)',
+                                         border: 'none',
+                                         borderRadius: '4px',
+                                         cursor: 'pointer',
+                                         fontSize: '1.2rem',
+                                         padding: '2.1px 5.25px',
+                                         color: '#8b7763ff'
+                                     }}
+                                 >
+                                     📋
+                                 </button>
+                             </div>
+                         </div>
                     </div>
                     <button className="add-contact-btn" onClick={addContact} title="Add New Contact">+</button>
                 </div>
@@ -163,7 +205,6 @@ function Chat({ user }) {
                             className={`contact-item ${activeContact?.address === contact.address ? 'active' : ''}`}
                             onClick={() => handleContactSelect(contact)}
                         >
-                            {/* Contact's Avatar (first letter) */}
                             <div className="avatar">
                                 {contact.name.charAt(0).toUpperCase()}
                             </div>
@@ -182,7 +223,6 @@ function Chat({ user }) {
                     <>
                         {/* 1. Active Chat Header */}
                         <div className="chat-header">
-                            {/* Active Contact's Avatar (first letter) */}
                             <div className="avatar">
                                 {activeContact.name.charAt(0).toUpperCase()}
                             </div>
@@ -191,7 +231,6 @@ function Chat({ user }) {
                                 <p>{truncateAddress(activeContact.address)}</p>
                             </div>
                             
-                            {/* --- 3-DOTS OPTIONS MENU --- */}
                             <div className="header-right">
                                 <button 
                                     className="menu-btn" 
@@ -223,10 +262,12 @@ function Chat({ user }) {
                         {/* 3. Message Input Area */}
                         <SendMessage 
                             receiverAddress={activeContact.address} 
+                            contract={contract} // Pass contract if needed
+                            account={account}   // Pass account if needed
                         />
                     </>
                 ) : (
-                    /* Empty State: No contact selected */
+                    /* Empty State */
                     <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100%', flexDirection:'column', color: '#667781'}}>
                         <h2>BLOCKTALK</h2>
                         <p>Select a contact to start messaging securely.</p>
