@@ -17,7 +17,7 @@ const truncateAddress = (address) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 };
 
-// UPDATED: Now accepting 'account', 'contract', and 'web3' props
+// UPDATED: Accepting 'account', 'contract', and 'web3' props
 function Chat({ user, account, contract, web3 }) {
     const [messages, setMessages] = useState([]);
     const [contacts, setContacts] = useState([]);
@@ -40,13 +40,45 @@ function Chat({ user, account, contract, web3 }) {
 
     // --- Actions ---
 
-    // NEW: Function to copy your address to clipboard
+    // 1. COPY ADDRESS FUNCTION
     const copyAddress = () => {
-        // Use the active MetaMask account, or fallback to the logged-in user account
         const addressToCopy = account || user.account;
         if (addressToCopy) {
             navigator.clipboard.writeText(addressToCopy);
-            alert("Address copied to clipboard!");
+            // alert("Address copied!"); // Optional: Commented out to be less annoying
+        }
+    };
+
+    // 2. NEW: FORCE REGISTER FUNCTION (The Fix)
+    const forceRegister = async () => {
+        if (!contract || !account) {
+            alert("Blockchain not connected. Please wait or refresh.");
+            return;
+        }
+
+        // Check if we have the local public key
+        const publicKey = user?.identity?.publicKey;
+        if (!publicKey) {
+            alert("Error: Local Public Key missing. Please logout and login again.");
+            return;
+        }
+
+        const confirmReg = window.confirm("Register your Public Key on the Blockchain? (This requires a small gas fee)");
+        if (!confirmReg) return;
+
+        try {
+            const name = user.name || "Unknown";
+            console.log("Registering User:", name, publicKey);
+            
+            // Call the Smart Contract
+            // We assume the function is named 'registerUser' (standard for this project type)
+            // The contract only asks for the PublicKey, not the Name
+await contract.methods.registerPublicKey(publicKey).send({ from: account });
+            
+            alert("✅ Registration Successful! You can now receive messages.");
+        } catch (error) {
+            console.error("Registration Error:", error);
+            alert("Registration Failed: " + (error.message || error));
         }
     };
 
@@ -159,9 +191,29 @@ function Chat({ user, account, contract, web3 }) {
                          
                          {/* Profile Info & Copy Address */}
                          <div style={{display:'flex', flexDirection:'column'}}>
-                             <h3 title={user.account} style={{margin:0, fontSize:'1rem'}}>My Profile</h3>
+                             <div style={{display:'flex', alignItems:'center', gap:'5px'}}>
+                                <h3 title={user.account} style={{margin:0, fontSize:'1rem'}}>My Profile</h3>
+                                
+                                {/* FORCE REGISTER BUTTON */}
+                                <button 
+                                    onClick={forceRegister}
+                                    title="Register your Public Key on Blockchain (Required to receive messages)"
+                                    style={{
+                                        background: '#d32f2f',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        fontSize: '0.6rem',
+                                        padding: '2px 4px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    REGISTER KEY
+                                </button>
+                             </div>
                              
-                             {/* NEW: Wallet Address Display with Copy Button */}
+                             {/* Wallet Address Display */}
                              <div className="wallet-info" style={{ 
                                  marginTop: '2px', 
                                  fontSize: '0.8rem', 
@@ -262,13 +314,13 @@ function Chat({ user, account, contract, web3 }) {
                         {/* 3. Message Input Area */}
                         <SendMessage 
                             receiverAddress={activeContact.address} 
-                            contract={contract} // Pass contract if needed
-                            account={account}   // Pass account if needed
+                            contract={contract} 
+                            account={account} 
                         />
                     </>
                 ) : (
-                    /* Empty State */
-                    <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100%', flexDirection:'column', color: '#667781'}}>
+                    /* Empty State - UPDATED CLASS */
+                    <div className="empty-chat-container">
                         <h2>BLOCKTALK</h2>
                         <p>Select a contact to start messaging securely.</p>
                     </div>

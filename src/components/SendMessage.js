@@ -1,100 +1,102 @@
 import React, { useState } from 'react';
-import { getPublicKeyFromChain, sendMessageOnChain } from '../services/blockchain';
-import { encryptMessage } from '../services/encryption';
 import { uploadToIPFS } from '../services/ipfs';
+import { encryptMessage } from '../services/encryption';
+import { sendMessageOnChain } from '../services/blockchain';
 
-const fileToBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-});
-
-function SendMessage({ receiverAddress }) {
-    const [message, setMessage] = useState('');
-    const [file, setFile] = useState(null);
+function SendMessage({ receiverAddress, contract, account }) {
+    const [text, setText] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
+    const handleSend = async (e) => {
         e.preventDefault();
-        if (!message && !file) return;
+        if (!text.trim()) return;
+        if (!receiverAddress || !contract || !account) {
+            alert("Chat not ready. Please check connection.");
+            return;
+        }
 
         setLoading(true);
         try {
-            // 1. Get Key
-            const receiverPublicKey = await getPublicKeyFromChain(receiverAddress);
-            if (!receiverPublicKey) {
-                alert("Receiver has not registered a public key yet.");
+            console.log("Preparing to send to:", receiverAddress);
+
+            // --- CRITICAL FIX: Fetch Receiver's Public Key FRESH from Blockchain ---
+            // We don't trust local cache. We ask the contract directly.
+            const receiverPublicKey = await contract.methods.publicKeys(receiverAddress).call();
+
+            console.log("Receiver Public Key from Chain:", receiverPublicKey);
+
+            if (!receiverPublicKey || receiverPublicKey.length === 0) {
+                alert(`Error: The user ${receiverAddress.substring(0,6)}... has not registered a Public Key on the blockchain yet.\n\nTell them to click the 'REGISTER KEY' button in their sidebar!`);
                 setLoading(false);
                 return;
             }
 
-            // 2. Prepare Payload
-            let payload;
-            if (file) {
-                const fileBase64 = await fileToBase64(file);
-                payload = { type: 'file', fileName: file.name, fileType: file.type, content: fileBase64 };
-            } else {
-                payload = { type: 'text', content: message };
-            }
+            // 1. Encrypt the message using the Receiver's Public Key
+            const encryptedData = await encryptMessage(receiverPublicKey, text);
+            
+            // 2. Upload Encrypted data to IPFS
+            const ipfsHash = await uploadToIPFS(encryptedData);
+            console.log("Message uploaded to IPFS:", ipfsHash);
 
-            // 3. Encrypt & Upload
-            const encrypted = await encryptMessage(receiverPublicKey, payload);
-            const ipfsHash = await uploadToIPFS(encrypted);
+            // 3. Send the IPFS Hash to the Blockchain
+            // We call the Smart Contract function 'sendMessage'
+            await contract.methods.sendMessage(receiverAddress, ipfsHash).send({ from: account });
 
-            // 4. Send
-            await sendMessageOnChain(receiverAddress, ipfsHash);
-
-            // Reset
-            setMessage('');
-            setFile(null);
+            console.log("Message sent to blockchain!");
+            setText(""); // Clear input
         } catch (error) {
-            console.error(error);
-            alert("Failed to send message");
+            console.error("Sending failed:", error);
+            alert("Failed to send message: " + (error.message || error));
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (
-        <div className="chat-footer">
-            <form onSubmit={handleSubmit} style={{display:'flex', width:'100%', alignItems:'center'}}>
-                
-                {/* File Button (Paperclip style) */}
-                <label htmlFor="file-input" className="icon-btn" title="Attach File" style={{cursor:'pointer'}}>
-                    📎
-                </label>
-                <input 
-                    type="file" 
-                    id="file-input" 
-                    style={{display:'none'}} 
-                    onChange={(e) => setFile(e.target.files[0])}
-                />
-
-                <div className="input-wrapper">
-                    {file ? (
-                        <div style={{width:'100%', color:'#008069'}}>
-                            📄 {file.name} <button type="button" onClick={()=>setFile(null)} style={{border:'none', background:'none', cursor:'pointer'}}>❌</button>
-                        </div>
-                    ) : (
-                        <textarea 
-                            placeholder="Type a message" 
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSubmit(e);
-                                }
-                            }}
-                        />
-                    )}
-                </div>
-
-                <button type="submit" className="icon-btn send-btn" disabled={loading}>
-                    {loading ? "..." : "➤"}
-                </button>
-            </form>
-        </div>
+        <form className="send-message-form" onSubmit={handleSend} style={{
+            padding: '20px',
+            borderTop: '1px solid #eee',
+            display: 'flex',
+            gap: '10px',
+            backgroundColor: '#fff'
+        }}>
+            <input
+                type="text"
+                className="message-input"
+                placeholder="Type a message..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                disabled={loading}
+                style={{
+                    flexGrow: 1,
+                    padding: '12px 15px',
+                    borderRadius: '25px',
+                    border: '1px solid #ddd',
+                    outline: 'none',
+                    fontSize: '1rem'
+                }}
+            />
+            <button 
+                type="submit" 
+                disabled={loading}
+                style={{
+                    backgroundColor: loading ? '#ccc' : '#4a148c',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '45px',
+                    height: '45px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.2rem',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                }}
+            >
+                {loading ? '...' : '➤'}
+            </button>
+        </form>
     );
 }
 
