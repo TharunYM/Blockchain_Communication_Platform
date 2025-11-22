@@ -22,11 +22,14 @@ function Chat({ user }) {
 
     // Load contacts from local storage
     useEffect(() => {
-        const storedContacts = localStorage.getItem(CONTACTS_STORAGE_KEY);
-        if (storedContacts) {
-            setContacts(JSON.parse(storedContacts));
-        }
-    }, []);
+        const loadContacts = () => {
+            const storedContacts = localStorage.getItem(CONTACTS_STORAGE_KEY);
+            if (storedContacts) {
+                setContacts(JSON.parse(storedContacts));
+            }
+        };
+        loadContacts();
+    }, [user.account]);
 
     // --- Polling for Messages ---
     useEffect(() => {

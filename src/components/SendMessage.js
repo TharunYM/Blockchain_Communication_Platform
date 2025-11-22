@@ -1,141 +1,103 @@
 import React, { useState } from 'react';
-import { getPublicKeyFromChain, sendMessageOnChain } from '../services/blockchain';
-import { encryptMessage } from '../services/encryption';
 import { uploadToIPFS } from '../services/ipfs';
+import { encryptMessage } from '../services/encryption';
+import { sendMessageOnChain } from '../services/blockchain';
 
-const fileToBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
+function SendMessage({ receiverAddress, contract, account }) {
+    const [text, setText] = useState("");
+    const [loading, setLoading] = useState(false);
 
-function SendMessage({ contacts }) {
-    const [receiver, setReceiver] = useState('');
-    const [message, setMessage] = useState('');
-    const [file, setFile] = useState(null);
-    const [status, setStatus] = useState('');
-
-    const handleSubmit = async (e) => {
+    const handleSend = async (e) => {
         e.preventDefault();
-        if (!receiver || (!message && !file)) {
-            alert("Please fill in receiver and either a message or a file.");
+        if (!text.trim()) return;
+        if (!receiverAddress || !contract || !account) {
+            alert("Chat not ready. Please check connection.");
             return;
         }
 
-        setStatus('1/5: Fetching receiver public key...');
-        const receiverPublicKey = await getPublicKeyFromChain(receiver);
-        if (!receiverPublicKey) {
-            setStatus('Error: Receiver has not registered their public key.');
-            return;
+        setLoading(true);
+        try {
+            console.log("Preparing to send to:", receiverAddress);
+
+            // --- CRITICAL FIX: Fetch Receiver's Public Key FRESH from Blockchain ---
+            // We don't trust local cache. We ask the contract directly.
+            const receiverPublicKey = await contract.methods.publicKeys(receiverAddress).call();
+
+            console.log("Receiver Public Key from Chain:", receiverPublicKey);
+
+            if (!receiverPublicKey || receiverPublicKey.length === 0) {
+                alert(`Error: The user ${receiverAddress.substring(0,6)}... has not registered a Public Key on the blockchain yet.\n\nTell them to click the 'REGISTER KEY' button in their sidebar!`);
+                setLoading(false);
+                return;
+            }
+
+            // 1. Encrypt the message using the Receiver's Public Key
+            const encryptedData = await encryptMessage(receiverPublicKey, text);
+            
+            // 2. Upload Encrypted data to IPFS
+            const ipfsHash = await uploadToIPFS(encryptedData);
+            console.log("Message uploaded to IPFS:", ipfsHash);
+
+            // 3. Send the IPFS Hash to the Blockchain
+            // We call the Smart Contract function 'sendMessage'
+            await contract.methods.sendMessage(receiverAddress, ipfsHash).send({ from: account });
+
+            console.log("Message sent to blockchain!");
+            setText(""); // Clear input
+        } catch (error) {
+            console.error("Sending failed:", error);
+            alert("Failed to send message: " + (error.message || error));
+        } finally {
+            setLoading(false);
         }
-
-        let payload;
-        if (file) {
-            setStatus('2/5: Encrypting file...');
-            const fileBase64 = await fileToBase64(file);
-            payload = {
-                type: 'file',
-                fileName: file.name,
-                fileType: file.type,
-                content: fileBase64,
-            };
-        } else {
-            setStatus('2/5: Encrypting message...');
-            payload = {
-                type: 'text',
-                content: message,
-            };
-        }
-        
-        const encryptedMessage = await encryptMessage(receiverPublicKey, payload);
-
-        setStatus('3/5: Uploading to IPFS...');
-        const ipfsHash = await uploadToIPFS(encryptedMessage);
-        if (!ipfsHash) {
-            setStatus('Error: Failed to upload to IPFS.');
-            return;
-        }
-
-        setStatus('4/5: Sending transaction to blockchain...');
-        await sendMessageOnChain(receiver, ipfsHash);
-
-        setStatus(`5/5: Message sent successfully! IPFS Hash: ${ipfsHash}`);
-        setMessage('');
-        setFile(null);
-        setReceiver(''); // Clear receiver field
-        if (document.getElementById('file-input')) {
-            document.getElementById('file-input').value = null;
-        }
-    };
-
-    // --- (NEW) Handle dropdown change ---
-    const handleSelectChange = (e) => {
-        setReceiver(e.target.value);
-    };
-
-    // --- (NEW) Handle text input change ---
-    const handleInputChange = (e) => {
-        setReceiver(e.target.value);
     };
 
     return (
-        <div className="send-message card">
-            <h4>Send a New Message</h4>
-            <form onSubmit={handleSubmit}>
-
-                {/* --- (UPDATED) --- */}
-                <select
-                    value={receiver} // The value is controlled by the 'receiver' state
-                    onChange={handleSelectChange}
-                >
-                    <option value="">Select a contact...</option>
-                    {contacts.map((contact) => (
-                        <option key={contact.address} value={contact.address}>
-                            {contact.name} ({truncateAddress(contact.address)})
-                        </option>
-                    ))}
-                </select>
-
-                <p style={{ textAlign: 'center', margin: '0.5rem 0', color: '#555' }}>— OR —</p>
-
-                <input
-                    type="text"
-                    placeholder="...enter a new Ethereum Address"
-                    value={receiver} // The value is ALSO controlled by the 'receiver' state
-                    onChange={handleInputChange}
-                />
-                {/* ----------------- */}
-
-                <textarea
-                    placeholder="Your secure message (or leave blank to send a file)"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    disabled={!!file}
-                ></textarea>
-                
-                <input
-                    type="file"
-                    id="file-input"
-                    onChange={(e) => {
-                        setFile(e.target.files[0]);
-                        if (e.target.files[0]) setMessage('');
-                    }}
-                    disabled={!!message}
-                />
-
-                <button type="submit">Encrypt & Send</button>
-            </form>
-            {status && <p><small>{status}</small></p>}
-        </div>
+        <form className="send-message-form" onSubmit={handleSend} style={{
+            padding: '20px',
+            borderTop: '1px solid #eee',
+            display: 'flex',
+            gap: '10px',
+            backgroundColor: '#fff'
+        }}>
+            <input
+                type="text"
+                className="message-input"
+                placeholder="Type a message..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                disabled={loading}
+                style={{
+                    flexGrow: 1,
+                    padding: '12px 15px',
+                    borderRadius: '25px',
+                    border: '1px solid #ddd',
+                    outline: 'none',
+                    fontSize: '1rem'
+                }}
+            />
+            <button 
+                type="submit" 
+                disabled={loading}
+                style={{
+                    backgroundColor: loading ? '#ccc' : '#4a148c',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '45px',
+                    height: '45px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.2rem',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                }}
+            >
+                {loading ? '...' : '➤'}
+            </button>
+        </form>
     );
 }
 
 export default SendMessage;
-
-// Add this helper at the bottom
-const truncateAddress = (address) => {
-    if (!address) return "";
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-};

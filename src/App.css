@@ -1,5 +1,32 @@
 /* src/App.css - Aesthetic Modern Theme */
+/* src/App.css - Aesthetic Modern Theme */
 
+/* --- Color Palette & Variables --- */
+:root {
+  --primary-brand: #6a0572;      /* Deep Plum/Purple */
+  --secondary-brand: #8e2de2;    /* Vibrant Violet */
+  --tertiary-brand: #4a00e0;     /* Darker Violet/Indigo */
+  --accent-success: #28a745;     /* Green for success/read receipts */
+  --text-dark: #2c3e50;          /* Dark charcoal for main text */
+  --text-medium: #7f8c8d;        /* Muted gray for secondary text */
+  --text-light: #ecf0f1;         /* Light gray for white-on-dark */
+
+  --bg-main: #f0f2f5;            /* Light neutral background for general UI */
+  --bg-chat-window: #e8eaf6;     /* Very light blue-gray for chat area */
+  --bg-sidebar: #ffffff;         /* Pure white for sidebar */
+  --bg-header: #ffffff;          /* Pure white for headers */
+  --bg-input: #ffffff;           /* Pure white for input fields */
+
+  --border-subtle: #e0e0e0;       /* Light border color */
+  --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 6px 20px rgba(0, 0, 0, 0.15);
+
+  --bubble-sent: linear-gradient(135deg, #e0f7fa 0%, #bbdefb 100%); /* Light blue-cyan gradient */
+  --bubble-received: #ffffff;   /* Pure white for received messages */
+}
+
+/* --- Global & Base Styles --- */
+html, body, #root {
 /* --- Color Palette & Variables --- */
 :root {
   --primary-brand: #6a0572;      /* Deep Plum/Purple */
@@ -45,7 +72,25 @@ html, body, #root {
 /* --- Login Screen --- */
 .App.login-background {
   background: linear-gradient(135deg, var(--secondary-brand) 0%, var(--tertiary-brand) 100%);
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; /* Using Inter for modern feel */
+  overflow: hidden;
+  color: var(--text-dark);
+}
+
+.App {
   display: flex;
+  width: 100%;
+  height: 100vh;
+  background-color: var(--bg-main);
+}
+
+/* --- Login Screen --- */
+.App.login-background {
+  background: linear-gradient(135deg, var(--secondary-brand) 0%, var(--tertiary-brand) 100%);
+  display: flex;
+  justify-content: center;
   justify-content: center;
   align-items: center;
 }
@@ -55,8 +100,37 @@ html, body, #root {
   padding: 60px 40px; /* More vertical padding */
   border-radius: 20px; /* Softer corners */
   box-shadow: var(--shadow-medium);
+}
+
+.login-container {
+  background-color: rgba(255, 255, 255, 0.98);
+  padding: 60px 40px; /* More vertical padding */
+  border-radius: 20px; /* Softer corners */
+  box-shadow: var(--shadow-medium);
   text-align: center;
   width: 100%;
+  max-width: 450px; /* Slightly wider */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-container:hover {
+  transform: translateY(-8px); /* More pronounced lift */
+  box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+}
+
+.login-container h2 {
+  color: var(--primary-brand);
+  font-size: 2.8rem; /* Larger title */
+  margin-bottom: 15px;
+  letter-spacing: -1.5px;
+  font-weight: 800; /* Bolder */
+}
+
+.login-container p {
+  color: var(--text-medium);
+  font-size: 1.15rem; /* Slightly larger text */
+  margin-bottom: 40px; /* More spacing */
+  line-height: 1.6;
   max-width: 450px; /* Slightly wider */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -94,8 +168,32 @@ html, body, #root {
   box-shadow: var(--shadow-light);
   transition: all 0.3s ease;
   letter-spacing: 0.5px;
+.login-btn {
+  background: linear-gradient(90deg, var(--primary-brand), var(--secondary-brand));
+  color: white;
+  border: none;
+  padding: 16px 30px; /* Larger button */
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: var(--shadow-light);
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
+.login-btn:hover {
+  box-shadow: var(--shadow-medium);
+  transform: translateY(-3px);
+}
+
+.login-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.8;
 .login-btn:hover {
   box-shadow: var(--shadow-medium);
   transform: translateY(-3px);
@@ -118,8 +216,26 @@ html, body, #root {
   background-color: var(--bg-main);
   color: var(--text-medium);
   font-size: 1.2rem;
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-main);
+  color: var(--text-medium);
+  font-size: 1.2rem;
 }
 
+/* --- Chat UI --- */
+
+/* Sidebar (Left Column) */
+.sidebar {
+  width: 30%;
+  min-width: 320px; /* Slightly wider min-width */
+  max-width: 450px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
 /* --- Chat UI --- */
 
 /* Sidebar (Left Column) */
@@ -144,11 +260,34 @@ html, body, #root {
 }
 
 .sidebar-header h3 {
+.sidebar-header {
+  height: 70px; /* Taller header */
+  padding: 15px 20px; /* More padding */
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-header h3 {
   margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-dark);
   font-size: 1.3rem;
   color: var(--text-dark);
 }
 
+.contact-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px; /* More padding */
 .contact-list {
   flex: 1;
   overflow-y: auto;
@@ -176,8 +315,29 @@ html, body, #root {
 
 .contact-info {
   flex-grow: 1;
+  border-bottom: 1px solid #f8f8f8; /* Very light border */
+  transition: background-color 0.2s ease;
 }
 
+.contact-item:hover {
+  background-color: #f5f5f5; /* Subtle hover */
+}
+
+.contact-item.active {
+  background-color: #e3f2fd; /* Light blue for active contact */
+  border-left: 4px solid var(--primary-brand); /* Accent bar */
+  padding-left: 16px; /* Adjust padding due to border */
+}
+
+.contact-info {
+  flex-grow: 1;
+}
+
+.contact-info h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
 .contact-info h4 {
   margin: 0;
   font-size: 1.1rem;
@@ -189,8 +349,17 @@ html, body, #root {
   margin: 4px 0 0;
   font-size: 0.85rem;
   color: var(--text-medium);
+.contact-info p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-medium);
 }
 
+.avatar {
+  width: 50px; /* Slightly larger avatar */
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--primary-brand), var(--secondary-brand)); /* Gradient avatar */
 .avatar {
   width: 50px; /* Slightly larger avatar */
   height: 50px;
@@ -204,11 +373,20 @@ html, body, #root {
   margin-right: 15px;
   font-size: 1.3rem; /* Larger initial */
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  margin-right: 15px;
+  font-size: 1.3rem; /* Larger initial */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .add-contact-btn {
   background: none;
+  background: none;
   border: none;
+  color: var(--primary-brand);
+  font-size: 2.2rem; /* Larger plus sign */
   color: var(--primary-brand);
   font-size: 2.2rem; /* Larger plus sign */
   cursor: pointer;
@@ -216,9 +394,24 @@ html, body, #root {
   padding: 5px;
   border-radius: 50%;
   transition: background-color 0.2s;
+  line-height: 1;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 }
 
 .add-contact-btn:hover {
+  background-color: rgba(var(--primary-brand), 0.1);
+}
+
+/* Chat Window (Right Column) */
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-chat-window);
+  position: relative;
+  overflow: hidden; /* Ensure pattern doesn't bleed */
   background-color: rgba(var(--primary-brand), 0.1);
 }
 
@@ -273,11 +466,62 @@ html, body, #root {
   flex: 1;
   padding: 20px 60px; /* More horizontal padding */
   overflow-y: auto;
+/* Subtle pattern for chat background using CSS only */
+.chat-window::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  opacity: 0.08; /* Softer opacity */
+  background-image: radial-gradient(var(--primary-brand) 1px, transparent 1px);
+  background-size: 25px 25px; /* Larger pattern */
+  pointer-events: none;
+  filter: blur(0.5px); /* Slightly blur the pattern */
+}
+
+.chat-header {
+  height: 70px; /* Taller header */
+  padding: 15px 20px;
+  background-color: var(--bg-header);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* To push dropdown to right */
+  z-index: 2; /* Ensure header is above chat pattern */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Very subtle shadow */
+}
+
+.chat-header-info h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.chat-header-info p {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-medium);
+}
+
+
+.messages-container {
+  flex: 1;
+  padding: 20px 60px; /* More horizontal padding */
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   z-index: 1;
+  z-index: 1;
 }
 
+.message-bubble {
+  max-width: 60%; /* Slightly smaller max-width */
+  padding: 12px 18px; /* More padding inside bubbles */
+  margin-bottom: 10px; /* More space between bubbles */
+  border-radius: 12px; /* Softer corners */
+  font-size: 1rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Softer shadow */
+  position: relative;
 .message-bubble {
   max-width: 60%; /* Slightly smaller max-width */
   padding: 12px 18px; /* More padding inside bubbles */
@@ -291,6 +535,20 @@ html, body, #root {
 
 .message-sent {
   align-self: flex-end;
+  background: var(--bubble-sent);
+  color: var(--text-dark); /* Darker text for readability on light bubble */
+  border-top-right-radius: 4px; /* Slightly less sharp point */
+}
+
+.message-received {
+  align-self: flex-start;
+  background-color: var(--bubble-received);
+  border-top-left-radius: 4px; /* Slightly less sharp point */
+  color: var(--text-dark);
+}
+
+.msg-time {
+  display: block;
   background: var(--bubble-sent);
   color: var(--text-dark); /* Darker text for readability on light bubble */
   border-top-right-radius: 4px; /* Slightly less sharp point */
@@ -321,8 +579,35 @@ html, body, #root {
 .chat-footer {
   padding: 15px 20px; /* More padding */
   background-color: var(--bg-header);
+  font-size: 0.75rem; /* Slightly larger time */
+  color: var(--text-medium);
+  margin-top: 6px; /* More space from message */
+}
+
+.read-receipt {
+  margin-left: 6px; /* More space for receipt icon */
+  color: var(--accent-success); /* Fresh green */
+  font-weight: 600; /* Bolder checkmark */
+  font-size: 0.85rem;
+}
+
+.chat-footer {
+  padding: 15px 20px; /* More padding */
+  background-color: var(--bg-header);
   display: flex;
   align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  z-index: 2;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.05); /* Subtle top shadow */
+}
+
+.input-wrapper {
+  flex: 1;
+  background: var(--bg-input);
+  border-radius: 25px; /* Pill-shaped input */
+  padding: 12px 20px; /* More padding */
+  margin: 0 15px; /* More margin */
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); /* Inner shadow */
   border-top: 1px solid var(--border-subtle);
   z-index: 2;
   box-shadow: 0 -1px 3px rgba(0,0,0,0.05); /* Subtle top shadow */
@@ -358,7 +643,54 @@ html, body, #root {
   padding: 8px;
   border-radius: 50%;
   transition: background-color 0.2s, transform 0.2s;
+.input-wrapper textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  height: 24px; /* Taller input */
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-dark);
+  padding: 0;
 }
+
+.send-btn {
+  color: var(--primary-brand);
+  font-size: 1.8rem; /* Larger send icon */
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.send-btn:hover {
+  background-color: rgba(var(--primary-brand), 0.1);
+  transform: scale(1.1);
+}
+
+/* --- Chat Options Menu (3 Dots) --- */
+.header-right {
+  margin-left: auto;
+  position: relative;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  font-size: 1.8rem; /* Larger icon */
+  cursor: pointer;
+  color: var(--text-medium);
+  padding: 10px; /* Larger hit area */
+  border-radius: 50%;
+  line-height: 1;
+  transition: background-color 0.2s;
+}
+
+.menu-btn:hover {
+  background-color: #f0f2f5;
 
 .send-btn:hover {
   background-color: rgba(var(--primary-brand), 0.1);
