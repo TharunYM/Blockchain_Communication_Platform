@@ -9,12 +9,14 @@
     "ipfs-http-client": "^60.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "util": "^0.12.5",
+    "web3": "^4.16.0"
   },
   "scripts": {
     "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
+    "build": "cross-env NODE_OPTIONS=--localstorage-file=./.localstorage.json react-app-rewired build",
+    "test": "cross-env NODE_OPTIONS=--localstorage-file=./.localstorage.json react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -38,7 +40,9 @@
   "devDependencies": {
     "assert": "^2.1.0",
     "buffer": "^6.0.3",
+    "cross-env": "^10.1.0",
     "crypto-browserify": "^3.12.1",
+    "customize-cra": "^1.0.0",
     "process": "^0.11.10",
     "react-app-rewired": "^2.2.1",
     "stream-browserify": "^3.0.0",

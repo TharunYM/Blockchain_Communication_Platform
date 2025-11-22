@@ -1,85 +1,44 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
-// You will need to add new CSS for this to look good
-// We'll add 'sent' and 'received' classes
+function MessageList({ messages, readStatusMap }) {
+    const messagesEndRef = useRef(null);
 
-function MessageList({ messages, contacts, addContact, currentUserAccount, readStatusMap }) {
+    // Auto-scroll to bottom
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
-    const isContact = (address) => {
-        if (!address || !currentUserAccount) return false;
-        if (address.toLowerCase() === currentUserAccount.toLowerCase()) return true;
-        return contacts.some(contact => contact.address.toLowerCase() === address.toLowerCase());
-    };
-
-    const renderMessageContent = (msg) => {
+    const renderContent = (msg) => {
         if (msg.type === 'file') {
             return (
-                <p>
-                    <strong>File:</strong>{' '}
-                    <a href={msg.content} download={msg.fileName}>
+                <span>
+                    📄 <a href={msg.content} download={msg.fileName} style={{color: 'inherit'}}>
                         {msg.fileName}
-                    </a>
-                </p>
+                    </a> <small>({msg.fileType})</small>
+                </span>
             );
         }
-        return (
-            <p className="message-text"><strong>Message:</strong> {msg.content}</p>
-        );
+        return msg.content;
     };
 
-    // --- (NEW) Render the read status ---
-    const renderReadStatus = (msg) => {
-        if (msg.direction !== 'sent') {
-            return null;
-        }
-
-        if (readStatusMap.get(msg.ipfsHash) === 'read') {
-            return <small className="read-receipt read">Read ✓✓</small>;
-        }
-
-        return <small className="read-receipt sent">Sent ✓</small>;
+    const renderStatus = (msg) => {
+        if (msg.direction !== 'sent') return null;
+        const isRead = readStatusMap.get(msg.ipfsHash) === 'read';
+        return <span className="read-receipt">{isRead ? "✓✓" : "✓"}</span>;
     };
-    // ------------------------------------
 
     return (
-        <div className="message-list card">
-            <h4>Inbox / Sent</h4>
-            {messages.length === 0 ? (
-                <p>No messages yet.</p>
-            ) : (
-                <ul>
-                    {messages.map((msg, index) => {
-                        // --- (NEW) Add class based on direction ---
-                        const messageClass = msg.direction === 'sent' ? 'message-sent' : 'message-received';
-                        
-                        return (
-                            <li key={index} className={messageClass}>
-                                <div className="message-header">
-                                    <p>
-                                        <strong>{msg.direction === 'sent' ? 'To:' : 'From:'}</strong> {msg.direction === 'sent' ? msg.receiver : msg.sender}
-                                    </p>
-                                    {/* Only show 'Add Contact' for received messages */}
-                                    {msg.direction === 'received' && !isContact(msg.sender) && (
-                                        <button 
-                                            className="add-contact-btn" 
-                                            onClick={() => addContact(msg.sender)}
-                                        >
-                                            Add to Contacts
-                                        </button>
-                                    )}
-                                </div>
-
-                                {msg.isDecrypted ? renderMessageContent(msg) : "Could not decrypt"}
-                                
-                                <div className="message-footer">
-                                    <small>{msg.timestamp}</small>
-                                    {renderReadStatus(msg)}
-                                </div>
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
+        <div className="messages-container">
+            {messages.map((msg, index) => (
+                <div key={index} className={`message-bubble ${msg.direction === 'sent' ? 'message-sent' : 'message-received'}`}>
+                    {renderContent(msg)}
+                    <span className="msg-time">
+                        {new Date(msg.timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        {renderStatus(msg)}
+                    </span>
+                </div>
+            ))}
+            <div ref={messagesEndRef} />
         </div>
     );
 }

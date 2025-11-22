@@ -1,35 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import MessageList from './MessageList';
 import SendMessage from './SendMessage';
-import { downloadFromIPFS } from '../services/ipfs';
-import { decryptMessage } from '../services/encryption'; // <-- TYPO WAS HERE
-import { 
-    listenForMessages,
-    markAsReadOnChain,
-    listenForReadReceipts // <-- IMPORT NEW LISTENER
-} from '../services/blockchain';
-
-// --- (Helper Function) ---
-const truncateAddress = (address) => {
-    if (!address) return "";
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-};
-// -----------------------------
+import { fetchMessages } from '../services/api';
 
 const CONTACTS_STORAGE_KEY = 'secure-messenger-contacts';
 
+// Helper to mock truncation for usernames (optional if names are short)
+const truncateName = (name) => {
+    if (!name) return "";
+    return name.length > 15 ? `${name.substring(0, 12)}...` : name;
+};
+
 function Chat({ user }) {
     const [messages, setMessages] = useState([]);
-    const [showKeys, setShowKeys] = useState(false);
     const [contacts, setContacts] = useState([]);
+    const [readStatusMap, setReadStatusMap] = useState(new Map()); // Kept for UI compatibility
+    
+    // UI States
+    const [activeContact, setActiveContact] = useState(null);
+    const [showMenu, setShowMenu] = useState(false);
 
-    // --- (NEW STATE FOR READ RECEIPTS) ---
-    // This map will store the read status of sent messages
-    // e.g., { "Qm...": "read" }
-    const [readStatusMap, setReadStatusMap] = useState(new Map());
-    // -------------------------------------
-
-    // Load contacts from localStorage
+    // Load contacts from local storage
     useEffect(() => {
         const storedContacts = localStorage.getItem(CONTACTS_STORAGE_KEY);
         if (storedContacts) {
@@ -37,101 +28,157 @@ function Chat({ user }) {
         }
     }, []);
 
-    // Add a contact
-    const addContact = (address) => {
-        const name = prompt("Enter a name for this contact:", "");
-        if (name && address) {
-            const newContact = { name, address };
-            if (contacts.some(c => c.address.toLowerCase() === address.toLowerCase())) {
+    // --- Polling for Messages ---
+    useEffect(() => {
+        const pollMessages = async () => {
+            if (!user.account) return;
+            const msgs = await fetchMessages(user.account);
+            
+            // Add direction and mock 'isDecrypted' to match previous data structure
+            const processedMsgs = msgs.map(msg => ({
+                ...msg,
+                direction: msg.sender === user.account ? 'sent' : 'received',
+                isDecrypted: true 
+            }));
+            
+            // Simple diff check to avoid re-rendering if length matches (basic optimization)
+            setMessages(prev => {
+                if (prev.length !== processedMsgs.length) return processedMsgs;
+                return prev; 
+            });
+        };
+
+        // Poll every 2 seconds
+        const interval = setInterval(pollMessages, 2000);
+        pollMessages(); // Initial fetch
+
+        return () => clearInterval(interval);
+    }, [user.account]);
+
+    // --- Actions ---
+
+    const addContact = () => {
+        const username = prompt("Enter Username of contact:");
+        if (username) {
+            if (contacts.some(c => c.address.toLowerCase() === username.toLowerCase())) {
                 alert("Contact already exists.");
                 return;
             }
-            const newContactsList = [...contacts, newContact];
+            // We treat 'address' as 'username' in this simple version
+            const newContactsList = [...contacts, { name: username, address: username }];
             setContacts(newContactsList);
             localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(newContactsList));
         }
     };
 
-    // --- (UPDATED) handleNewMessage now handles SENT and RECEIVED ---
-    const handleNewMessage = useCallback(async (eventData) => {
-        const { sender, receiver, ipfsHash } = eventData;
-        const myAddress = user.account.toLowerCase();
-
-        // Don't process if user is not the sender OR receiver
-        if (sender.toLowerCase() !== myAddress && receiver.toLowerCase() !== myAddress) {
-            return;
+    const deleteContact = () => {
+        if (!activeContact) return;
+        if (window.confirm(`Are you sure you want to delete ${activeContact.name}?`)) {
+            const updatedContacts = contacts.filter(c => c.address !== activeContact.address);
+            setContacts(updatedContacts);
+            localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(updatedContacts));
+            setActiveContact(null);
+            setShowMenu(false);
         }
+    };
 
-        // Check if message is already in our list
-        if (messages.some(msg => msg.ipfsHash === ipfsHash)) {
-            return;
-        }
+    const handleContactSelect = (contact) => {
+        setActiveContact(contact);
+        setShowMenu(false);
+    };
 
-        console.log("Processing message:", ipfsHash);
-        
-        // Decrypt the message
-        const encryptedString = await downloadFromIPFS(ipfsHash);
-        if (!encryptedString) return;
-            
-        const decryptedPayload = await decryptMessage(user.identity.privateKey, encryptedString);
-        if (!decryptedPayload) return;
-
-        // Determine message direction
-        const direction = sender.toLowerCase() === myAddress ? 'sent' : 'received';
-
-        // If it's a received message, mark it as read on-chain
-        if (direction === 'received') {
-            markAsReadOnChain(ipfsHash);
-        }
-        
-        setMessages(prev => [
-            ...prev,
-            { 
-                ...eventData,
-                ...decryptedPayload,
-                isDecrypted: true,
-                direction: direction // <-- ADD DIRECTION
-            }
-        ]);
-        
-    }, [user.account, user.identity.privateKey, messages]); // <-- Add messages dependency
-
-    // --- (NEW) Listen for Read Receipts ---
-    useEffect(() => {
-        listenForReadReceipts((ipfsHash) => {
-            setReadStatusMap(prevMap => {
-                const newMap = new Map(prevMap);
-                newMap.set(ipfsHash, "read");
-                return newMap;
-            });
-        });
-    }, []); // Runs once
-    // -------------------------------------
-    
-    // Listen for new messages
-    useEffect(() => {
-        listenForMessages(handleNewMessage);
-    }, [handleNewMessage]);
-
-    // Sort messages by timestamp
-    const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
+    const activeMessages = messages
+        .filter(msg => {
+            if (!activeContact) return false;
+            const otherParty = msg.direction === 'sent' ? msg.receiver : msg.sender;
+            return otherParty === activeContact.address;
+        })
+        .sort((a, b) => a.timestamp - b.timestamp);
 
     return (
-        <div className="chat-container">
-            {/* --- Reverted Welcome Card --- */}
-            <div className="card">
-                <h3>Welcome, {user.account}</h3>
-                <p>Your Public Key: <code>{user.identity.publicKey}</code></p>
+        <div className="App">
+            {/* --- LEFT SIDEBAR --- */}
+            <div className="sidebar">
+                <div className="sidebar-header">
+                    <div style={{display:'flex', alignItems:'center', gap: '10px'}}>
+                         <div className="avatar" style={{backgroundColor:'#4a148c'}}>You</div>
+                         <div style={{display:'flex', flexDirection:'column'}}>
+                             <h3 style={{margin:0, fontSize:'1rem'}}>My Profile</h3>
+                             <div className="wallet-info" style={{ 
+                                 marginTop: '2px', 
+                                 fontSize: '0.9rem', 
+                                 color: '#423c3cff',
+                                 fontWeight:'600'
+                             }}>
+                                 <span>@{user.account}</span>
+                             </div>
+                         </div>
+                    </div>
+                    <button className="add-contact-btn" onClick={addContact} title="Add New Contact">+</button>
+                </div>
+                
+                <div className="contact-list">
+                    {contacts.length === 0 && (
+                        <p style={{textAlign:'center', color:'#999', marginTop:20, fontSize:'0.9rem'}}>No contacts yet.<br/>Click + to add one.</p>
+                    )}
+                    {contacts.map(contact => (
+                        <div 
+                            key={contact.address} 
+                            className={`contact-item ${activeContact?.address === contact.address ? 'active' : ''}`}
+                            onClick={() => handleContactSelect(contact)}
+                        >
+                            <div className="avatar">
+                                {contact.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="contact-info">
+                                <h4>{contact.name}</h4>
+                                <p>@{truncateName(contact.address)}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-            
-            <SendMessage contacts={contacts} />
-            <MessageList 
-                messages={sortedMessages} // <-- Pass sorted messages
-                contacts={contacts} 
-                addContact={addContact} 
-                currentUserAccount={user.account}
-                readStatusMap={readStatusMap} // <-- Pass read status
-            />
+
+            {/* --- RIGHT CHAT WINDOW --- */}
+            <div className="chat-window">
+                {activeContact ? (
+                    <>
+                        <div className="chat-header">
+                            <div className="avatar">
+                                {activeContact.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="chat-header-info">
+                                <h4>{activeContact.name}</h4>
+                                <p>@{activeContact.address}</p>
+                            </div>
+                            
+                            <div className="header-right">
+                                <button className="menu-btn" onClick={() => setShowMenu(!showMenu)}>&#8942;</button>
+                                {showMenu && (
+                                    <div className="dropdown-menu">
+                                        <div className="dropdown-item danger" onClick={deleteContact}>Delete Contact</div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <MessageList 
+                            messages={activeMessages} 
+                            readStatusMap={readStatusMap}
+                        />
+
+                        <SendMessage 
+                            receiverAddress={activeContact.address} 
+                            sender={user.account}
+                        />
+                    </>
+                ) : (
+                    <div className="empty-chat-container">
+                        <h2>BLOCKTALK</h2>
+                        <p>Select a contact to start messaging.</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
